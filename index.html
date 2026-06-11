@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6인 근태 관리 시스템</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🗓️ 근태 및 자율출퇴근 관리</h1>
+
+        <section class="form-section">
+            <h2>근태 기록 등록</h2>
+            <form id="attendance-form">
+                <label>직원 선택:</label>
+                <select id="select-employee" required>
+                    </select>
+
+                <label>구분:</label>
+                <select id="select-type" required onchange="toggleFormFields()">
+                    <option value="출퇴근">출퇴근 (자율)</option>
+                    <option value="휴가">휴가</option>
+                </select>
+
+                <label>날짜:</label>
+                <input type="date" id="input-date" required>
+
+                <div id="work-fields">
+                    <label>출근 시간:</label>
+                    <input type="time" id="input-in">
+                    <label>퇴근 시간:</label>
+                    <input type="time" id="input-out">
+                </div>
+
+                <div id="leave-fields" style="display: none;">
+                    <label>휴가 종류:</label>
+                    <select id="select-leave">
+                        <option value="연차">연차</option>
+                        <option value="오전반차">오전반차</option>
+                        <option value="오후반차">오후반차</option>
+                    </select>
+                </div>
+
+                <button type="submit">기록 저장하기</button>
+            </form>
+        </section>
+
+        <section class="view-section">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="changeView('day')">일 단위</button>
+                <button class="tab-btn" onclick="changeView('week')">주 단위</button>
+                <button class="tab-btn" onclick="changeView('month')">월 단위</button>
+            </div>
+            
+            <div id="view-title">### 오늘 기준 데이터</div>
+            <div id="data-container">
+                </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
