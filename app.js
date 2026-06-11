@@ -140,7 +140,7 @@ function toggleFormFields() {
 }
 
 // ==========================================
-// 7. 데이터 등록(Insert) 하기 (선택 종류에 맞게 자동 매핑)
+// 7. 데이터 등록(Insert) 하기 (중복 방지 로직 탑재)
 // ==========================================
 async function handleFormSubmit(e) {
     e.preventDefault();
@@ -155,7 +155,28 @@ async function handleFormSubmit(e) {
         return;
     }
 
-    // Supabase에 보낼 기본 기본 구조
+    // 🚫 [중복 체크] 이 직원이 선택한 날짜에 이미 등록된 데이터가 있는지 먼저 조회
+    try {
+        const { data: existingRecords, error: checkError } = await _supabase
+            .from('attendance')
+            .select('id')
+            .eq('employee_id', parseInt(employeeId))
+            .eq('work_date', date);
+
+        if (checkError) {
+            console.error("중복 체크 오류:", checkError);
+        }
+
+        // 만약 조회된 결과가 한 개라도 있다면 등록을 거부합니다.
+        if (existingRecords && existingRecords.length > 0) {
+            alert("⚠️ 해당 직원은 이 날짜에 이미 근태(또는 휴가) 기록이 등록되어 있습니다.");
+            return; // 함수를 여기서 즉시 종료하여 저장을 막음
+        }
+    } catch (err) {
+        console.error("중복 검사 중 예외 발생:", err);
+    }
+
+    // 중복 검사를 통과했을 때만 아래 저장 로직 실행
     let insertData = {
         employee_id: parseInt(employeeId),
         work_date: date,
@@ -166,7 +187,6 @@ async function handleFormSubmit(e) {
         leave_type: null
     };
 
-    // 사용자가 선택한 종류에 따라 데이터 분류 가공
     if (selectedType === "10시~7시") {
         insertData.type = "출퇴근";
         insertData.check_in = "10:00:00";
@@ -197,7 +217,7 @@ async function handleFormSubmit(e) {
     } else {
         alert("성공적으로 기록되었습니다!");
         document.getElementById("attendance-form").reset();
-        document.getElementById("input-date").value = date; // 날짜는 오늘로 유지
+        document.getElementById("input-date").value = date; 
         
         // 갱신된 데이터를 달력에 다시 그리기
         fetchAttendance();
