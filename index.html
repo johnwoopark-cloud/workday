@@ -5,18 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>6인 근태 관리 시스템</title>
     <link rel="stylesheet" href="style.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>🗓️ 근태 및 자율출퇴근 관리</h1>
+        <h1>🗓️ 6인 근태 관리 시스템 (캘린더)</h1>
 
         <section class="form-section">
             <h2>근태 기록 등록</h2>
             <form id="attendance-form">
                 <label>직원 선택:</label>
-                <select id="select-employee" required>
-                    </select>
+                <select id="select-employee" required></select>
 
                 <label>구분:</label>
                 <select id="select-type" required onchange="toggleFormFields()">
@@ -47,16 +49,8 @@
             </form>
         </section>
 
-        <section class="view-section">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="changeView('day')">일 단위</button>
-                <button class="tab-btn" onclick="changeView('week')">주 단위</button>
-                <button class="tab-btn" onclick="changeView('month')">월 단위</button>
-            </div>
-            
-            <div id="view-title">### 오늘 기준 데이터</div>
-            <div id="data-container">
-                </div>
+        <section class="calendar-section">
+            <div id="calendar"></div>
         </section>
     </div>
 
