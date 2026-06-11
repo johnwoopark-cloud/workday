@@ -74,16 +74,15 @@ async function fetchEmployees() {
         console.error("fetchEmployees 에러:", err);
     }
 }
-
 // ==========================================
-// 5. Supabase에서 근태 기록 가져와 달력에 표시하기
+// 5. Supabase에서 근태 기록 가져와 달력에 표시하기 (가공 로직 추가)
 // ==========================================
 async function fetchAttendance() {
     try {
         const { data, error } = await _supabase
             .from('attendance')
             .select(`
-                id, work_date, type, check_in, check_out, leave_type,
+                id, work_date, type, check_in, check_out, leave_type, notes,
                 employees ( name )
             `);
 
@@ -98,13 +97,23 @@ async function fetchAttendance() {
             let eventColor = '#4f46e5';
 
             if (record.type === '출퇴근') {
-                const checkIn = record.check_in ? record.check_in.substring(0, 5) : '--:--';
-                const checkOut = record.check_out ? record.check_out.substring(0, 5) : '--:--';
-                eventTitle = `[출근] ${empName}: ${checkIn}~${checkOut}`;
-                eventColor = '#10b981'; // 출퇴근은 초록색
+                // 출퇴근 시간에 따라 타이틀 예쁘게 표기
+                let shiftName = "출퇴근";
+                if (record.check_in === "10:00:00") shiftName = "10시~7시";
+                else if (record.check_in === "08:00:00") shiftName = "8시~5시";
+                else if (record.check_in === "07:00:00") shiftName = "7시~4시";
+
+                eventTitle = `[${shiftName}] ${empName}`;
+                eventColor = '#10b981'; // 근무는 초록색
             } else {
+                // 휴가, 오전반차, 오후반차 표기
                 eventTitle = `[${record.leave_type}] ${empName}`;
                 eventColor = '#f59e0b'; // 휴가는 주황색
+            }
+
+            // 메모가 있다면 타이틀 뒤에 붙여주기
+            if (record.notes) {
+                eventTitle += ` (${record.notes})`;
             }
 
             return {
@@ -122,6 +131,7 @@ async function fetchAttendance() {
         console.error("fetchAttendance 에러:", err);
     }
 }
+
 // ==========================================
 // 6. [구분 종류] 선택 전환 (현재는 하나로 통합되어 비워두거나 단순 제어 가능)
 // ==========================================
