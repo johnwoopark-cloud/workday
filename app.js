@@ -1,24 +1,25 @@
 // ==========================================
-// 1. Supabase 설정 (여기에 본인 정보를 "한 번만" 넣으세요)
+// 1. Supabase 설정 (본인의 정보를 입력하세요)
 // ==========================================
-const SUPABASE_URL = "https://vxvpjhaxplrqlxyyzxlo.supabase.co"; // 👈 본인 주소로 교체
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4dnBqaGF4cGxycWx4eXl6eGxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNDM2MDUsImV4cCI6MjA5NjcxOTYwNX0.pfcnUPN82_OA-w3jl3Xf0Kbjsdj9t2EqV2yyCYGJ7NU"; // 👈 본인 Anon 키로 교체
+const SUPABASE_URL = "https://xxxxxxxxx.supabase.co"; 
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let calendar; // FullCalendar 인스턴스를 담을 전역 변수
+let calendar; 
 
 // ==========================================
 // 2. 페이지 로드 시 실행할 이벤트들
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-    initCalendar();     // 달력 초기화
-    fetchEmployees();   // 직원 목록 가져오기
-    fetchAttendance();  // 근태 데이터 가져와서 달력에 표시
+    initCalendar();     
+    fetchEmployees();   
+    fetchAttendance();  
     
-    // 폼 제출 이벤트 연결
     document.getElementById("attendance-form").addEventListener("submit", handleFormSubmit);
-    // 기본 날짜를 오늘로 설정
-    document.getElementById("input-date").value = new Date().toISOString().split('T')[0];
+    
+    // 기본 시작 날짜를 오늘로 설정
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById("input-start-date").value = todayStr;
 });
 
 // ==========================================
@@ -28,29 +29,24 @@ function initCalendar() {
     const calendarEl = document.getElementById('calendar');
     
     calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth', // 기본 화면: 월 단위 달력
-        locale: 'ko',                // 한국어 설정
+        initialView: 'dayGridMonth', 
+        locale: 'ko',                
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay' // 월, 주, 일 버튼
+            right: 'dayGridMonth,timeGridWeek,timeGridDay' 
         },
-        buttonText: {
-            today: '오늘',
-            month: '월',
-            week: '주',
-            day: '일'
-        },
+        buttonText: { today: '오늘', month: '월', week: '주', day: '일' },
         height: '650px',
         editable: false,
-        events: [] // 초기에는 빈 값
+        events: [] 
     });
     
     calendar.render();
 }
 
 // ==========================================
-// 4. Supabase에서 직원 목록 가져와 드롭다운에 채우기
+// 4. Supabase에서 직원 목록 가져오기
 // ==========================================
 async function fetchEmployees() {
     try {
@@ -74,8 +70,9 @@ async function fetchEmployees() {
         console.error("fetchEmployees 에러:", err);
     }
 }
+
 // ==========================================
-// 5. Supabase에서 근태 기록 가져와 달력에 표시하기 (가공 로직 추가)
+// 5. Supabase에서 근태 기록 가져와 달력에 표시하기
 // ==========================================
 async function fetchAttendance() {
     try {
@@ -97,21 +94,18 @@ async function fetchAttendance() {
             let eventColor = '#4f46e5';
 
             if (record.type === '출퇴근') {
-                // 출퇴근 시간에 따라 타이틀 예쁘게 표기
                 let shiftName = "출퇴근";
                 if (record.check_in === "10:00:00") shiftName = "10시~7시";
                 else if (record.check_in === "08:00:00") shiftName = "8시~5시";
                 else if (record.check_in === "07:00:00") shiftName = "7시~4시";
 
                 eventTitle = `[${shiftName}] ${empName}`;
-                eventColor = '#10b981'; // 근무는 초록색
+                eventColor = '#10b981'; 
             } else {
-                // 휴가, 오전반차, 오후반차 표기
                 eventTitle = `[${record.leave_type}] ${empName}`;
-                eventColor = '#f59e0b'; // 휴가는 주황색
+                eventColor = '#f59e0b'; 
             }
 
-            // 메모가 있다면 타이틀 뒤에 붙여주기
             if (record.notes) {
                 eventTitle += ` (${record.notes})`;
             }
@@ -132,22 +126,30 @@ async function fetchAttendance() {
     }
 }
 
-// ==========================================
-// 6. [구분 종류] 선택 전환 (현재는 하나로 통합되어 비워두거나 단순 제어 가능)
-// ==========================================
-function toggleFormFields() {
-    // 입력 칸이 간소화되어 별도로 숨길 필드가 없으므로 비워두어도 무방합니다.
+function toggleFormFields() {}
+
+// 두 날짜 사이의 모든 날짜 리스트를 구하는 함수 (YYYY-MM-DD 형태 배열 리턴)
+function getDatesStartToArr(startDate, endDate) {
+    const arr = [];
+    const dt = new Date(startDate);
+    const endDt = new Date(endDate);
+    while (dt <= endDt) {
+        arr.push(new Date(dt).toISOString().split('T')[0]);
+        dt.setDate(dt.getDate() + 1);
+    }
+    return arr;
 }
 
 // ==========================================
-// 7. 데이터 등록(Insert) 하기 (중복 방지 로직 탑재)
+// 7. 데이터 등록(Insert) 하기 (시작/종료일 분할 및 동일 내용 중복 검사)
 // ==========================================
 async function handleFormSubmit(e) {
     e.preventDefault();
 
     const employeeId = document.getElementById("select-employee").value;
     const selectedType = document.getElementById("select-type").value;
-    const date = document.getElementById("input-date").value;
+    const startDate = document.getElementById("input-start-date").value;
+    let endDate = document.getElementById("input-end-date").value;
     const notes = document.getElementById("input-notes").value || null;
     
     if (!selectedType) {
@@ -155,71 +157,91 @@ async function handleFormSubmit(e) {
         return;
     }
 
-    // 🚫 [중복 체크] 이 직원이 선택한 날짜에 이미 등록된 데이터가 있는지 먼저 조회
-    try {
-        const { data: existingRecords, error: checkError } = await _supabase
-            .from('attendance')
-            .select('id')
-            .eq('employee_id', parseInt(employeeId))
-            .eq('work_date', date);
-
-        if (checkError) {
-            console.error("중복 체크 오류:", checkError);
-        }
-
-        // 만약 조회된 결과가 한 개라도 있다면 등록을 거부합니다.
-        if (existingRecords && existingRecords.length > 0) {
-            alert("⚠️ 해당 직원은 이 날짜에 이미 근태(또는 휴가) 기록이 등록되어 있습니다.");
-            return; // 함수를 여기서 즉시 종료하여 저장을 막음
-        }
-    } catch (err) {
-        console.error("중복 검사 중 예외 발생:", err);
+    // 💡 종료일이 입력되지 않았다면 시작일과 동일하게 매핑
+    if (!endDate) {
+        endDate = startDate;
     }
 
-    // 중복 검사를 통과했을 때만 아래 저장 로직 실행
-    let insertData = {
-        employee_id: parseInt(employeeId),
-        work_date: date,
-        notes: notes,
-        type: '',
-        check_in: null,
-        check_out: null,
-        leave_type: null
-    };
+    // 시작일이 종료일보다 늦은지 검사
+    if (new Date(startDate) > new Date(endDate)) {
+        alert("⚠️ 종료일은 시작일보다 빠를 수 없습니다.");
+        return;
+    }
+
+    // 선택된 유형에 따른 임시 컬럼 값 맵핑 설정
+    let targetType = '';
+    let targetCheckIn = null;
+    let targetCheckOut = null;
+    let targetLeaveType = null;
 
     if (selectedType === "10시~7시") {
-        insertData.type = "출퇴근";
-        insertData.check_in = "10:00:00";
-        insertData.check_out = "19:00:00";
+        targetType = "출퇴근"; targetCheckIn = "10:00:00"; targetCheckOut = "19:00:00";
     } else if (selectedType === "8시~5시") {
-        insertData.type = "출퇴근";
-        insertData.check_in = "08:00:00";
-        insertData.check_out = "17:00:00";
+        targetType = "출퇴근"; targetCheckIn = "08:00:00"; targetCheckOut = "17:00:00";
     } else if (selectedType === "7시~4시") {
-        insertData.type = "출퇴근";
-        insertData.check_in = "07:00:00";
-        insertData.check_out = "16:00:00";
+        targetType = "출퇴근"; targetCheckIn = "07:00:00"; targetCheckOut = "16:00:00";
     } else if (selectedType === "휴가") {
-        insertData.type = "휴가";
-        insertData.leave_type = "연차";
+        targetType = "휴가"; targetLeaveType = "연차";
     } else if (selectedType === "오전") {
-        insertData.type = "휴가";
-        insertData.leave_type = "오전반차";
+        targetType = "휴가"; targetLeaveType = "오전반차";
     } else if (selectedType === "오후") {
-        insertData.type = "휴가";
-        insertData.leave_type = "오후반차";
+        targetType = "휴가"; targetLeaveType = "오후반차";
     }
 
-    const { error } = await _supabase.from('attendance').insert([insertData]);
+    // 범위 내의 모든 날짜 배열 생성
+    const dateList = getDatesStartToArr(startDate, endDate);
+    
+    // 🚫 [동일 내용 정밀 검사] 
+    // 기간 내의 날짜 중 단 하나라도 '동일한 내용의 신청'이 이미 존재하는지 체크합니다.
+    try {
+        // 해당 직원의 근태 내역 전체를 먼저 효율적으로 한 번만 조회해옵니다.
+        const { data: existingRecords, error: checkError } = await _supabase
+            .from('attendance')
+            .select('work_date, type, leave_type')
+            .eq('employee_id', parseInt(employeeId))
+            .in('work_date', dateList);
+
+        if (checkError) throw checkError;
+
+        // 가져온 데이터 중 날짜와 신청 종류(type 또는 leave_type)가 완벽히 겹치는 항목이 있는지 탐색
+        for (const record of existingRecords) {
+            if (record.type === targetType) {
+                // 출퇴근의 경우 출퇴근이 겹치거나, 휴가의 경우 휴가 종류까지 완전히 겹치는지 체크
+                if (targetType === "출퇴근" || (targetType === "휴가" && record.leave_type === targetLeaveType)) {
+                    alert(`⚠️ 중복 입력 방지: 해당 직원은 ${record.work_date}에 이미 동일한 신청([${selectedType}])이 등록되어 있습니다.`);
+                    return; // 함수 전체 종료 (저장 차단)
+                }
+            }
+        }
+    } catch (err) {
+        alert("중복 검사 중 오류가 발생했습니다. 다시 시도해 주세요.");
+        console.error(err);
+        return;
+    }
+
+    // 갱신 데이터 일괄(Bulk) 삽입용 배열 구성
+    const insertRows = dateList.map(date => ({
+        employee_id: parseInt(employeeId),
+        work_date: date,
+        type: targetType,
+        check_in: targetCheckIn,
+        check_out: targetCheckOut,
+        leave_type: targetLeaveType,
+        notes: notes
+    }));
+
+    // Supabase에 데이터 한 번에 집어넣기
+    const { error } = await _supabase.from('attendance').insert(insertRows);
 
     if (error) {
         alert("저장 실패: " + error.message);
     } else {
-        alert("성공적으로 기록되었습니다!");
+        alert(`${dateList.length}일간의 기록이 성공적으로 저장되었습니다!`);
         document.getElementById("attendance-form").reset();
-        document.getElementById("input-date").value = date; 
+        document.getElementById("input-start-date").value = startDate; 
+        toggleFormFields();
         
-        // 갱신된 데이터를 달력에 다시 그리기
+        // 달력 새로고침
         fetchAttendance();
     }
 }
