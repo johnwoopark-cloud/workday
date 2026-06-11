@@ -87,16 +87,33 @@ async function fetchAttendance() {
 }
 
 // 4. 직원 정보 가져오기 (기존과 동일)
+// 직원 목록을 가져와서 드롭다운에 채우는 함수 (수정본)
 async function fetchEmployees() {
-    const { data, error } = await _supabase
-        .from('employees')
-        .select('id, name')
-        .order('id', { ascending: true });
+    try {
+        const { data, error } = await _supabase
+            .from('employees')
+            .select('id, name')
+            .order('id', { ascending: true });
 
-    if (error) return;
+        if (error) {
+            alert("Supabase에서 직원 명단을 가져오는데 실패했습니다: " + error.message);
+            console.error(error);
+            return;
+        }
 
-    const selectEl = document.getElementById("select-employee");
-    selectEl.innerHTML = data.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('');
+        const selectEl = document.getElementById("select-employee");
+        
+        if (data && data.length > 0) {
+            // 데이터가 있으면 드롭다운에 추가
+            selectEl.innerHTML = data.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('');
+        } else {
+            // 데이터베이스 테이블이 비어있을 때
+            selectEl.innerHTML = `<option value="">등록된 직원이 없습니다.</option>`;
+        }
+    } catch (err) {
+        alert("네트워크 또는 코드 에러가 발생했습니다. F12 콘솔을 확인하세요.");
+        console.error(err);
+    }
 }
 
 // [구분] 선택 전환 (기존과 동일)
