@@ -16,37 +16,29 @@
 
         <section class="form-section">
             <h2>근태 기록 등록</h2>
-            <form id="attendance-form">
+                <form id="attendance-form">
                 <label>직원 선택:</label>
                 <select id="select-employee" required></select>
 
-                <label>구분:</label>
+                <label>구분 종류:</label>
                 <select id="select-type" required onchange="toggleFormFields()">
-                    <option value="출퇴근">출퇴근 (자율)</option>
-                    <option value="휴가">휴가</option>
+                    <option value="">-- 선택하세요 --</option>
+                    <option value="10시~7시">10시 ~ 7시 (출퇴근)</option>
+                    <option value="8시~5시">8시 ~ 5시 (출퇴근)</option>
+                    <option value="7시~4시">7시 ~ 4시 (출퇴근)</option>
+                    <option value="휴가">휴가 (전일)</option>
+                    <option value="오전">오전 반차</option>
+                    <option value="오후">오후 반차</option>
                 </select>
 
                 <label>날짜:</label>
                 <input type="date" id="input-date" required>
 
-                <div id="work-fields">
-                    <label>출근 시간:</label>
-                    <input type="time" id="input-in">
-                    <label>퇴근 시간:</label>
-                    <input type="time" id="input-out">
-                </div>
-
-                <div id="leave-fields" style="display: none;">
-                    <label>휴가 종류:</label>
-                    <select id="select-leave">
-                        <option value="연차">연차</option>
-                        <option value="오전반차">오전반차</option>
-                        <option value="오후반차">오후반차</option>
-                    </select>
-                </div>
+                <label>메모/특이사항:</label>
+                <input type="text" id="input-notes" placeholder="예: 외근, 늦은 퇴근 등">
 
                 <button type="submit">기록 저장하기</button>
-            </form>
+            </form>  
         </section>
 
         <section class="calendar-section">
