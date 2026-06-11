@@ -1,12 +1,126 @@
-body { font-family: 'Malgun Gothic', sans-serif; background-color: #f5f7fb; color: #333; margin: 0; padding: 20px; }
-.container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-h1 { text-align: center; color: #2c3e50; }
-section { margin-bottom: 25px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
-label { display: block; margin-top: 10px; font-weight: bold; }
-input, select, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; }
-button { background-color: #4f46e5; color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; }
-button:hover { background-color: #4338ca; }
+/* 애플 시스템 폰트 및 부드러운 배경 세팅 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background-color: #f2f2f7; /* iOS 라이트 모드 배경색 */
+    color: #000000;
+    margin: 0;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+}
 
-/* 캘린더 내부 텍스트 폰트 조절 */
-.fc { font-size: 0.9rem; }
-.fc-event { cursor: pointer; padding: 2px 4px; margin-bottom: 2px; }
+/* 전체 컨테이너를 부드러운 카드로 */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 14px; /* 아이폰 특유의 둥근 모서리 */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+h1 {
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    color: #1c1c1e;
+    margin-bottom: 25px;
+    letter-spacing: -0.5px;
+}
+
+/* 입력창 구역 */
+section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #fafafa;
+    border: none;
+    border-radius: 12px;
+}
+
+h2 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #3a3a3c;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+/* iOS 스타일 인풋 폼 구조 */
+label {
+    display: block;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #8e8e93; /* 세련된 그레이 */
+    padding-left: 3px;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    box-sizing: border-box;
+    border: 1px solid #e5e5ea;
+    background-color: #ffffff;
+    border-radius: 10px;
+    font-size: 15px;
+    color: #1c1c1e;
+    transition: all 0.2s ease;
+}
+
+/* 인풋창 클릭 시 파란색 아이폰 포인트 효과 */
+input:focus, select:focus {
+    outline: none;
+    border-color: #007aff; 
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+/* 아이폰 시그니처 파란색 버튼 */
+button[type="submit"] {
+    background-color: #007aff; /* Apple Blue */
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.2s;
+}
+
+button[type="submit"]:hover {
+    background-color: #0062cc;
+}
+
+/* FullCalendar 아이폰 스타일 튜닝 */
+.fc {
+    --fc-border-color: #e5e5ea;
+    --fc-button-bg-color: #f2f2f7;
+    --fc-button-border-color: #e5e5ea;
+    --fc-button-text-color: #007aff;
+    --fc-button-hover-bg-color: #e5e5ea;
+    --fc-button-active-bg-color: #007aff;
+    --fc-button-active-text-color: #ffffff;
+    font-size: 14px;
+}
+
+/* 달력 상단 툴바 버튼 커스텀 */
+.fc .fc-button {
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 6px 12px;
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    background-color: #007aff !important;
+    border-color: #007aff !important;
+}
+
+/* 달력 내부 이벤트 바 둥글게 */
+.fc-event {
+    border-radius: 6px !important;
+    padding: 3px 6px !important;
+    font-size: 12px !important;
+    font-weight: 500;
+    border: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
