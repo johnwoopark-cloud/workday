@@ -1,8 +1,8 @@
 // ==========================================
 // 1. Supabase 설정 (본인의 정보를 입력하세요)
 // ==========================================
-const SUPABASE_URL = "https://xxxxxxxxx.supabase.co"; 
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; 
+const SUPABASE_URL = "https://vxvpjhaxplrqlxyyzxlo.supabase.co"; 
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4dnBqaGF4cGxycWx4eXl6eGxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNDM2MDUsImV4cCI6MjA5NjcxOTYwNX0.pfcnUPN82_OA-w3jl3Xf0Kbjsdj9t2EqV2yyCYGJ7NU"; 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let calendar; 
