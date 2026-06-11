@@ -15,8 +15,8 @@
         <h1>🗓️ 6인 근태 관리 시스템 (캘린더)</h1>
 
         <section class="form-section">
-            <h2>근태 기록 등록</h2>
-                <form id="attendance-form">
+<h2>근태 기록 등록</h2>
+            <form id="attendance-form">
                 <label>직원 선택:</label>
                 <select id="select-employee" required></select>
 
@@ -31,14 +31,23 @@
                     <option value="오후">오후 반차</option>
                 </select>
 
-                <label>날짜:</label>
-                <input type="date" id="input-date" required>
+                <div style="display: table; width: 100%; margin-top: 5px;">
+                    <div style="display: table-cell; width: 48%;">
+                        <label style="padding-left:0;">시작일:</label>
+                        <input type="date" id="input-start-date" required>
+                    </div>
+                    <div style="display: table-cell; width: 4%;"></div>
+                    <div style="display: table-cell; width: 48%;">
+                        <label style="padding-left:0;">종료일 (당일이면 생략 가능):</label>
+                        <input type="date" id="input-end-date">
+                    </div>
+                </div>
 
                 <label>메모/특이사항:</label>
                 <input type="text" id="input-notes" placeholder="예: 외근, 늦은 퇴근 등">
 
                 <button type="submit">기록 저장하기</button>
-            </form>  
+            </form>            
         </section>
 
         <section class="calendar-section">
