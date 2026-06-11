@@ -122,45 +122,62 @@ async function fetchAttendance() {
         console.error("fetchAttendance 에러:", err);
     }
 }
-
 // ==========================================
-// 6. [구분] 선택 전환 (출퇴근 vs 휴가 입력창 바꿈)
+// 6. [구분 종류] 선택 전환 (현재는 하나로 통합되어 비워두거나 단순 제어 가능)
 // ==========================================
 function toggleFormFields() {
-    const type = document.getElementById("select-type").value;
-    if (type === "출퇴근") {
-        document.getElementById("work-fields").style.display = "block";
-        document.getElementById("leave-fields").style.display = "none";
-    } else {
-        document.getElementById("work-fields").style.display = "none";
-        document.getElementById("leave-fields").style.display = "block";
-    }
+    // 입력 칸이 간소화되어 별도로 숨길 필드가 없으므로 비워두어도 무방합니다.
 }
 
 // ==========================================
-// 7. 데이터 등록(Insert) 하기
+// 7. 데이터 등록(Insert) 하기 (선택 종류에 맞게 자동 매핑)
 // ==========================================
 async function handleFormSubmit(e) {
     e.preventDefault();
 
     const employeeId = document.getElementById("select-employee").value;
-    const type = document.getElementById("select-type").value;
+    const selectedType = document.getElementById("select-type").value;
     const date = document.getElementById("input-date").value;
+    const notes = document.getElementById("input-notes").value || null;
     
+    if (!selectedType) {
+        alert("구분 종류를 선택해 주세요.");
+        return;
+    }
+
+    // Supabase에 보낼 기본 기본 구조
     let insertData = {
         employee_id: parseInt(employeeId),
-        type: type,
-        work_date: date
+        work_date: date,
+        notes: notes,
+        type: '',
+        check_in: null,
+        check_out: null,
+        leave_type: null
     };
 
-    if (type === "출퇴근") {
-        insertData.check_in = document.getElementById("input-in").value || null;
-        insertData.check_out = document.getElementById("input-out").value || null;
-        insertData.leave_type = null;
-    } else {
-        insertData.check_in = null;
-        insertData.check_out = null;
-        insertData.leave_type = document.getElementById("select-leave").value;
+    // 사용자가 선택한 종류에 따라 데이터 분류 가공
+    if (selectedType === "10시~7시") {
+        insertData.type = "출퇴근";
+        insertData.check_in = "10:00:00";
+        insertData.check_out = "19:00:00";
+    } else if (selectedType === "8시~5시") {
+        insertData.type = "출퇴근";
+        insertData.check_in = "08:00:00";
+        insertData.check_out = "17:00:00";
+    } else if (selectedType === "7시~4시") {
+        insertData.type = "출퇴근";
+        insertData.check_in = "07:00:00";
+        insertData.check_out = "16:00:00";
+    } else if (selectedType === "휴가") {
+        insertData.type = "휴가";
+        insertData.leave_type = "연차";
+    } else if (selectedType === "오전") {
+        insertData.type = "휴가";
+        insertData.leave_type = "오전반차";
+    } else if (selectedType === "오후") {
+        insertData.type = "휴가";
+        insertData.leave_type = "오후반차";
     }
 
     const { error } = await _supabase.from('attendance').insert([insertData]);
@@ -170,8 +187,7 @@ async function handleFormSubmit(e) {
     } else {
         alert("성공적으로 기록되었습니다!");
         document.getElementById("attendance-form").reset();
-        document.getElementById("input-date").value = date;
-        toggleFormFields();
+        document.getElementById("input-date").value = date; // 날짜는 오늘로 유지
         
         // 갱신된 데이터를 달력에 다시 그리기
         fetchAttendance();
