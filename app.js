@@ -95,6 +95,7 @@ async function fetchAttendance() {
 
             if (record.type === '출퇴근') {
                 let shiftName = "출퇴근";
+                if (record.check_in === "09:00:00") shiftName = "9시~6시";
                 if (record.check_in === "10:00:00") shiftName = "10시~7시";
                 else if (record.check_in === "08:00:00") shiftName = "8시~5시";
                 else if (record.check_in === "07:00:00") shiftName = "7시~4시";
@@ -174,12 +175,14 @@ async function handleFormSubmit(e) {
     let targetCheckOut = null;
     let targetLeaveType = null;
 
-    if (selectedType === "10시~7시") {
-        targetType = "출퇴근"; targetCheckIn = "10:00:00"; targetCheckOut = "19:00:00";
-    } else if (selectedType === "8시~5시") {
-        targetType = "출퇴근"; targetCheckIn = "08:00:00"; targetCheckOut = "17:00:00";
-    } else if (selectedType === "7시~4시") {
-        targetType = "출퇴근"; targetCheckIn = "07:00:00"; targetCheckOut = "16:00:00";
+    if (selectedType === "9시~6시") {                                      // ← 추가
+    targetType = "출퇴근"; targetCheckIn = "09:00:00"; targetCheckOut = "18:00:00";
+} else if (selectedType === "10시~7시") {
+    targetType = "출퇴근"; targetCheckIn = "10:00:00"; targetCheckOut = "19:00:00";
+} else if (selectedType === "8시~5시") {
+    targetType = "출퇴근"; targetCheckIn = "08:00:00"; targetCheckOut = "17:00:00";
+} else if (selectedType === "7시~4시") {
+    targetType = "출퇴근"; targetCheckIn = "07:00:00"; targetCheckOut = "16:00:00";
     } else if (selectedType === "휴가") {
         targetType = "휴가"; targetLeaveType = "연차";
     } else if (selectedType === "오전") {
