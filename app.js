@@ -158,31 +158,28 @@ async function handleFormSubmit(e) {
         return;
     }
 
-    // 💡 종료일이 입력되지 않았다면 시작일과 동일하게 매핑
     if (!endDate) {
         endDate = startDate;
     }
 
-    // 시작일이 종료일보다 늦은지 검사
     if (new Date(startDate) > new Date(endDate)) {
         alert("⚠️ 종료일은 시작일보다 빠를 수 없습니다.");
         return;
     }
 
-    // 선택된 유형에 따른 임시 컬럼 값 맵핑 설정
     let targetType = '';
     let targetCheckIn = null;
     let targetCheckOut = null;
     let targetLeaveType = null;
 
-    if (selectedType === "9시~6시") {                                      // ← 추가
-    targetType = "출퇴근"; targetCheckIn = "09:00:00"; targetCheckOut = "18:00:00";
-} else if (selectedType === "10시~7시") {
-    targetType = "출퇴근"; targetCheckIn = "10:00:00"; targetCheckOut = "19:00:00";
-} else if (selectedType === "8시~5시") {
-    targetType = "출퇴근"; targetCheckIn = "08:00:00"; targetCheckOut = "17:00:00";
-} else if (selectedType === "7시~4시") {
-    targetType = "출퇴근"; targetCheckIn = "07:00:00"; targetCheckOut = "16:00:00";
+    if (selectedType === "9시~6시") {
+        targetType = "출퇴근"; targetCheckIn = "09:00:00"; targetCheckOut = "18:00:00";
+    } else if (selectedType === "10시~7시") {
+        targetType = "출퇴근"; targetCheckIn = "10:00:00"; targetCheckOut = "19:00:00";
+    } else if (selectedType === "8시~5시") {
+        targetType = "출퇴근"; targetCheckIn = "08:00:00"; targetCheckOut = "17:00:00";
+    } else if (selectedType === "7시~4시") {
+        targetType = "출퇴근"; targetCheckIn = "07:00:00"; targetCheckOut = "16:00:00";
     } else if (selectedType === "휴가") {
         targetType = "휴가"; targetLeaveType = "연차";
     } else if (selectedType === "오전") {
@@ -191,38 +188,63 @@ async function handleFormSubmit(e) {
         targetType = "휴가"; targetLeaveType = "오후반차";
     }
 
-    // 범위 내의 모든 날짜 배열 생성
     const dateList = getDatesStartToArr(startDate, endDate);
-    
-    // 🚫 [동일 내용 정밀 검사] 
-    // 기간 내의 날짜 중 단 하나라도 '동일한 내용의 신청'이 이미 존재하는지 체크합니다.
+
     try {
-        // 해당 직원의 근태 내역 전체를 먼저 효율적으로 한 번만 조회해옵니다.
+        // 해당 직원의 기간 내 기존 기록 조회
         const { data: existingRecords, error: checkError } = await _supabase
             .from('attendance')
-            .select('work_date, type, leave_type')
+            .select('id, work_date, type, check_in, leave_type')
             .eq('employee_id', parseInt(employeeId))
             .in('work_date', dateList);
 
         if (checkError) throw checkError;
 
-        // 가져온 데이터 중 날짜와 신청 종류(type 또는 leave_type)가 완벽히 겹치는 항목이 있는지 탐색
+        // 완전히 동일한 내용인지 확인 (차단 대상)
         for (const record of existingRecords) {
-            if (record.type === targetType) {
-                // 출퇴근의 경우 출퇴근이 겹치거나, 휴가의 경우 휴가 종류까지 완전히 겹치는지 체크
-                if (targetType === "출퇴근" || (targetType === "휴가" && record.leave_type === targetLeaveType)) {
-                    alert(`⚠️ 중복 입력 방지: 해당 직원은 ${record.work_date}에 이미 동일한 신청([${selectedType}])이 등록되어 있습니다.`);
-                    return; // 함수 전체 종료 (저장 차단)
-                }
+            const isExactSame =
+                record.type === targetType &&
+                (targetType === "출퇴근"
+                    ? record.check_in === targetCheckIn          // 같은 시프트
+                    : record.leave_type === targetLeaveType);    // 같은 휴가 종류
+
+            if (isExactSame) {
+                alert(`⚠️ 중복 입력 방지: 해당 직원은 ${record.work_date}에 이미 동일한 신청([${selectedType}])이 등록되어 있습니다.`);
+                return;
             }
         }
+
+        // 같은 type(출퇴근↔출퇴근, 휴가↔휴가)끼리 겹치는 기존 기록 삭제
+        const idsToDelete = existingRecords
+            .filter(record => record.type === targetType)
+            .map(record => record.id);
+
+        if (idsToDelete.length > 0) {
+            const deletedDates = existingRecords
+                .filter(r => idsToDelete.includes(r.id))
+                .map(r => r.work_date)
+                .join(', ');
+
+            const confirmed = confirm(
+                `⚠️ 아래 날짜에 기존 [${targetType}] 기록이 있습니다:\n${deletedDates}\n\n기존 기록을 삭제하고 새 기록으로 교체할까요?`
+            );
+            if (!confirmed) return;
+
+            const { error: deleteError } = await _supabase
+                .from('attendance')
+                .delete()
+                .in('id', idsToDelete);
+
+            if (deleteError) throw deleteError;
+        }
+
     } catch (err) {
-        alert("중복 검사 중 오류가 발생했습니다. 다시 시도해 주세요.");
+        alert("처리 중 오류가 발생했습니다. 다시 시도해 주세요.");
         console.error(err);
         return;
     }
 
-    // 갱신 데이터 일괄(Bulk) 삽입용 배열 구성
+    // 새 데이터 삽입
     const insertRows = dateList.map(date => ({
         employee_id: parseInt(employeeId),
         work_date: date,
@@ -233,7 +255,6 @@ async function handleFormSubmit(e) {
         notes: notes
     }));
 
-    // Supabase에 데이터 한 번에 집어넣기
     const { error } = await _supabase.from('attendance').insert(insertRows);
 
     if (error) {
@@ -241,10 +262,8 @@ async function handleFormSubmit(e) {
     } else {
         alert(`${dateList.length}일간의 기록이 성공적으로 저장되었습니다!`);
         document.getElementById("attendance-form").reset();
-        document.getElementById("input-start-date").value = startDate; 
+        document.getElementById("input-start-date").value = startDate;
         toggleFormFields();
-        
-        // 달력 새로고침
         fetchAttendance();
     }
 }
