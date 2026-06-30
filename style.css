@@ -1,126 +1,241 @@
-/* 애플 시스템 폰트 및 부드러운 배경 세팅 */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-    background-color: #f2f2f7; /* iOS 라이트 모드 배경색 */
-    color: #000000;
+/* ============================================
+   2026 법무저작권팀 근태 캘린더 - 스타일
+   좌측 입력/필터 + 우측 대형 캘린더 (2단 구성)
+   ============================================ */
+
+:root {
+    --bg:        #f1f5f9;   /* 전체 배경 (slate-100) */
+    --panel:     #ffffff;   /* 카드 */
+    --ink:       #1e293b;   /* 본문 텍스트 (slate-800) */
+    --muted:     #64748b;   /* 보조 텍스트 (slate-500) */
+    --line:      #e2e8f0;   /* 구분선 (slate-200) */
+    --primary:   #4f46e5;   /* 강조 (indigo-600) */
+    --primary-d: #4338ca;
+    --danger:    #ef4444;
+    --radius:    12px;
+    --sidebar-w: 340px;
+    --font: "Pretendard", system-ui, -apple-system, "Apple SD Gothic Neo",
+            "Malgun Gothic", "맑은 고딕", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
     margin: 0;
-    padding: 20px;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
     -webkit-font-smoothing: antialiased;
 }
 
-/* 전체 컨테이너를 부드러운 카드로 */
-.container {
-    max-width: 1100px;
-    margin: 0 auto;
-    background: #ffffff;
-    padding: 25px;
-    border-radius: 14px; /* 아이폰 특유의 둥근 모서리 */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+/* ===== 상단 헤더 ===== */
+.app-header {
+    padding: 18px 28px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
 }
-
-h1 {
-    font-size: 24px;
+.app-header h1 {
+    margin: 0;
+    font-size: 22px;
     font-weight: 700;
-    text-align: center;
-    color: #1c1c1e;
-    margin-bottom: 25px;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.02em;
 }
 
-/* 입력창 구역 */
-section {
-    margin-bottom: 30px;
-    padding: 20px;
-    background-color: #fafafa;
-    border: none;
-    border-radius: 12px;
+/* ===== 본문 2단 레이아웃 ===== */
+.app-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px 28px 40px;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
-h2 {
-    font-size: 17px;
-    font-weight: 600;
-    color: #3a3a3c;
-    margin-top: 0;
-    margin-bottom: 15px;
+/* ----- 왼쪽 사이드바 ----- */
+.sidebar {
+    width: var(--sidebar-w);
+    flex: 0 0 var(--sidebar-w);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 20px;
 }
 
-/* iOS 스타일 인풋 폼 구조 */
-label {
-    display: block;
-    margin-top: 12px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #8e8e93; /* 세련된 그레이 */
-    padding-left: 3px;
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
-
-input, select {
-    width: 100%;
-    padding: 12px;
-    margin-top: 5px;
-    box-sizing: border-box;
-    border: 1px solid #e5e5ea;
-    background-color: #ffffff;
-    border-radius: 10px;
+.panel-title {
+    margin: 0 0 14px;
     font-size: 15px;
-    color: #1c1c1e;
-    transition: all 0.2s ease;
+    font-weight: 700;
+    color: var(--ink);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
 }
 
-/* 인풋창 클릭 시 파란색 아이폰 포인트 효과 */
-input:focus, select:focus {
-    outline: none;
-    border-color: #007aff; 
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
-}
-
-/* 아이폰 시그니처 파란색 버튼 */
-button[type="submit"] {
-    background-color: #007aff; /* Apple Blue */
-    color: #ffffff;
-    border: none;
-    padding: 14px;
-    border-radius: 10px;
-    font-size: 16px;
+/* ===== 폼 ===== */
+#attendance-form label {
+    display: block;
+    margin: 12px 0 5px;
+    font-size: 13px;
     font-weight: 600;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: background-color 0.2s;
+    color: var(--muted);
 }
+#attendance-form label:first-child { margin-top: 0; }
 
-button[type="submit"]:hover {
-    background-color: #0062cc;
-}
-
-/* FullCalendar 아이폰 스타일 튜닝 */
-.fc {
-    --fc-border-color: #e5e5ea;
-    --fc-button-bg-color: #f2f2f7;
-    --fc-button-border-color: #e5e5ea;
-    --fc-button-text-color: #007aff;
-    --fc-button-hover-bg-color: #e5e5ea;
-    --fc-button-active-bg-color: #007aff;
-    --fc-button-active-text-color: #ffffff;
+#attendance-form select,
+#attendance-form input[type="text"],
+#attendance-form input[type="date"] {
+    width: 100%;
+    padding: 9px 11px;
     font-size: 14px;
-}
-
-/* 달력 상단 툴바 버튼 커스텀 */
-.fc .fc-button {
-    font-weight: 500;
+    font-family: var(--font);
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 6px 12px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
 }
-.fc .fc-button-primary:not(:disabled).fc-button-active {
-    background-color: #007aff !important;
-    border-color: #007aff !important;
+#attendance-form select:focus,
+#attendance-form input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
-/* 달력 내부 이벤트 바 둥글게 */
-.fc-event {
-    border-radius: 6px !important;
-    padding: 3px 6px !important;
-    font-size: 12px !important;
-    font-weight: 500;
-    border: none !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+.date-row {
+    display: flex;
+    gap: 10px;
+}
+.date-row > div { flex: 1; min-width: 0; }
+.date-row label { margin-top: 12px; }
+
+.muted { color: var(--muted); font-weight: 400; }
+
+.btn-primary {
+    width: 100%;
+    margin-top: 16px;
+    padding: 11px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font);
+    color: #fff;
+    background: var(--primary);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s;
+}
+.btn-primary:hover { background: var(--primary-d); }
+
+.hint {
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+/* ===== 팀원 필터 ===== */
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.btn-mini {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font);
+    color: var(--primary);
+    background: #eef2ff;
+    border: 1px solid #e0e7ff;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.btn-mini:hover { background: #e0e7ff; }
+
+.filter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 240px;
+    overflow-y: auto;
+}
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.filter-item:hover { background: #f8fafc; }
+.filter-item input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+.filter-empty { font-size: 13px; color: var(--muted); margin: 4px 0; }
+
+/* ===== 범례 ===== */
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+}
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ink);
+}
+.legend-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* ----- 오른쪽 캘린더 ----- */
+.calendar-section {
+    flex: 1;
+    min-width: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* FullCalendar 다듬기 */
+.fc .fc-toolbar-title { font-size: 1.3rem; font-weight: 700; }
+.fc .fc-button-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+.fc .fc-button-primary:hover { background: var(--primary-d); border-color: var(--primary-d); }
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: var(--primary-d);
+    border-color: var(--primary-d);
+}
+.fc .fc-daygrid-event { cursor: pointer; }
+
+/* 주말/공휴일 칸 강조 */
+.fc .blocked-day { background-color: #fef2f2; }
+.fc .blocked-day .fc-daygrid-day-number { color: var(--danger); font-weight: 700; }
+
+/* ===== 반응형: 좁은 화면에서는 세로 배치 ===== */
+@media (max-width: 900px) {
+    .app-body { flex-direction: column; padding: 16px; }
+    .sidebar {
+        width: 100%;
+        flex: 1 1 auto;
+        position: static;
+    }
+    .calendar-section { width: 100%; }
 }
