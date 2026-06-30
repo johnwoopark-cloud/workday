@@ -212,22 +212,79 @@ html, body {
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-/* FullCalendar 다듬기 */
-.fc .fc-toolbar-title { font-size: 1.3rem; font-weight: 700; }
-.fc .fc-button-primary {
-    background: var(--primary);
-    border-color: var(--primary);
+/* FullCalendar 를 입력 패널과 같은 톤으로 통일 */
+.fc { font-family: var(--font); }
+
+/* 상단 툴바: 제목 + 가벼운 버튼 */
+.fc .fc-toolbar.fc-header-toolbar { margin-bottom: 16px; }
+.fc .fc-toolbar-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
 }
-.fc .fc-button-primary:hover { background: var(--primary-d); border-color: var(--primary-d); }
-.fc .fc-button-primary:not(:disabled).fc-button-active {
-    background: var(--primary-d);
-    border-color: var(--primary-d);
+
+/* 버튼: 사이드바의 btn-mini 와 동일한 가벼운 스타일 */
+.fc .fc-button {
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 12px;
+    color: var(--primary);
+    background: #eef2ff;
+    border: 1px solid #e0e7ff;
+    border-radius: 8px;
+    box-shadow: none;
+    text-transform: none;
 }
-.fc .fc-daygrid-event { cursor: pointer; }
+.fc .fc-button:hover { background: #e0e7ff; color: var(--primary-d); }
+.fc .fc-button:focus { box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+.fc .fc-button-primary:disabled {
+    background: #f1f5f9;
+    border-color: var(--line);
+    color: #94a3b8;
+}
+.fc .fc-button .fc-icon { font-size: 1.1em; vertical-align: -2px; }
+.fc .fc-today-button { font-weight: 700; }
+
+/* 요일 헤더 */
+.fc .fc-col-header-cell {
+    background: #f8fafc;
+    padding: 9px 0;
+}
+.fc .fc-col-header-cell-cushion {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+/* 날짜 칸 */
+.fc-theme-standard td,
+.fc-theme-standard th { border-color: var(--line); }
+.fc .fc-daygrid-day-number {
+    font-size: 13px;
+    color: var(--ink);
+    padding: 6px 8px;
+}
+.fc .fc-day-today { background: #eef2ff !important; }
+.fc .fc-day-today .fc-daygrid-day-number { color: var(--primary); font-weight: 700; }
+
+/* 이벤트 */
+.fc .fc-daygrid-event {
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 1px 5px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.fc .fc-daygrid-event:hover { filter: brightness(0.94); }
 
 /* 주말/공휴일 칸 강조 */
 .fc .blocked-day { background-color: #fef2f2; }
 .fc .blocked-day .fc-daygrid-day-number { color: var(--danger); font-weight: 700; }
+/* 오늘이면서 주말/공휴일인 경우 오늘 표시 우선 */
+.fc .fc-day-today.blocked-day { background: #eef2ff !important; }
 
 /* ===== 반응형: 좁은 화면에서는 세로 배치 ===== */
 @media (max-width: 900px) {
