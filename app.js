@@ -26,7 +26,8 @@ const TYPE_MAP = {
     "외근":     { type: "외근" },
     "교육":     { type: "교육" },
     "회의":     { type: "회의" },
-    "건강검진": { type: "건강검진" }
+    "건강검진": { type: "건강검진" },
+    "기타":     { type: "기타" }
 };
 
 // type별 색상 (달력 + 범례 공통)
@@ -37,7 +38,8 @@ const TYPE_COLORS = {
     "외근":     "#0ea5e9",
     "교육":     "#8b5cf6",
     "회의":     "#ec4899",
-    "건강검진": "#14b8a6"
+    "건강검진": "#14b8a6",
+    "기타":     "#6b7280"
 };
 
 // ==========================================
@@ -126,9 +128,9 @@ function initCalendar() {
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            right: ''
         },
-        buttonText: { today: '오늘', month: '월', week: '주', day: '일' },
+        buttonText: { today: '오늘' },
         height: '82vh',
         expandRows: true,
         editable: false,
