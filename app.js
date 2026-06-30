@@ -6,29 +6,67 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let calendar; 
-let holidaySet = new Set(); // 공휴일 날짜 모음 ('YYYY-MM-DD' 형태)
+let holidaySet = new Set();      // 공휴일 날짜 모음 ('YYYY-MM-DD')
+let allEvents = [];              // 전체 근태 이벤트(필터 전 원본)
+let selectedFilterIds = new Set(); // 표시할 팀원 id(문자열). 비어있으면 전체 표시
 
 // ==========================================
-// 2. 페이지 로드 시 실행할 이벤트들
+// 근태 유형 정의 (한 곳에서 관리)
+// ==========================================
+// selectedType(드롭다운 값) -> 저장 정보 매핑
+const TYPE_MAP = {
+    "9시~6시":  { type: "출퇴근", checkIn: "09:00:00", checkOut: "18:00:00" },
+    "10시~7시": { type: "출퇴근", checkIn: "10:00:00", checkOut: "19:00:00" },
+    "8시~5시":  { type: "출퇴근", checkIn: "08:00:00", checkOut: "17:00:00" },
+    "7시~4시":  { type: "출퇴근", checkIn: "07:00:00", checkOut: "16:00:00" },
+    "휴가":     { type: "휴가",   leaveType: "연차" },
+    "오전":     { type: "휴가",   leaveType: "오전반차" },
+    "오후":     { type: "휴가",   leaveType: "오후반차" },
+    "출장":     { type: "출장" },
+    "외근":     { type: "외근" },
+    "교육":     { type: "교육" },
+    "회의":     { type: "회의" },
+    "건강검진": { type: "건강검진" }
+};
+
+// type별 색상 (달력 + 범례 공통)
+const TYPE_COLORS = {
+    "출퇴근":   "#10b981",
+    "휴가":     "#f59e0b",
+    "출장":     "#3b82f6",
+    "외근":     "#0ea5e9",
+    "교육":     "#8b5cf6",
+    "회의":     "#ec4899",
+    "건강검진": "#14b8a6"
+};
+
+// ==========================================
+// 2. 페이지 로드
 // ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
-    await fetchHolidays();  // 공휴일을 먼저 불러온 뒤 달력을 그려야 표시가 정확함
-    initCalendar();     
-    fetchEmployees();   
-    fetchAttendance();  
-    
+    await fetchHolidays();
+    initCalendar();
+    fetchEmployees();
+    fetchAttendance();
+
     document.getElementById("attendance-form").addEventListener("submit", handleFormSubmit);
-    
-    // 기본 시작 날짜를 오늘로 설정
-    const todayStr = toDateStr(new Date());
-    document.getElementById("input-start-date").value = todayStr;
+
+    // 필터 전체 선택/해제 버튼
+    const selAll = document.getElementById("filter-select-all");
+    const clrAll = document.getElementById("filter-clear-all");
+    if (selAll) selAll.addEventListener("click", () => setAllEmployeeFilter(true));
+    if (clrAll) clrAll.addEventListener("click", () => setAllEmployeeFilter(false));
+
+    // 범례 그리기
+    renderLegend();
+
+    // 기본 시작 날짜 = 오늘
+    document.getElementById("input-start-date").value = toDateStr(new Date());
 });
 
 // ==========================================
-// 날짜/주말/공휴일 관련 공통 함수
+// 날짜/주말/공휴일 공통 함수
 // ==========================================
-
-// Date 객체를 'YYYY-MM-DD'(로컬 기준) 문자열로 변환 (시간대 오류 방지)
 function toDateStr(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -36,71 +74,72 @@ function toDateStr(d) {
     return `${y}-${m}-${day}`;
 }
 
-// 토요일(6) / 일요일(0) 여부
 function isWeekend(dateStr) {
     const day = new Date(dateStr + 'T00:00:00').getDay();
     return day === 0 || day === 6;
 }
 
-// 공휴일 여부
 function isHoliday(dateStr) {
     return holidaySet.has(dateStr);
 }
 
-// 근태를 기록하면 안 되는 날(주말 또는 공휴일)
 function isBlockedDate(dateStr) {
     return isWeekend(dateStr) || isHoliday(dateStr);
 }
 
+// 출퇴근 check_in -> 시프트 이름
+function shiftName(checkIn) {
+    if (checkIn === "09:00:00") return "9시~6시";
+    if (checkIn === "10:00:00") return "10시~7시";
+    if (checkIn === "08:00:00") return "8시~5시";
+    if (checkIn === "07:00:00") return "7시~4시";
+    return "출퇴근";
+}
+
 // ==========================================
-// 대한민국 공휴일 불러오기 (Nager.Date 무료 API, 키 불필요)
+// 대한민국 공휴일 (Nager.Date 무료 API, 키 불필요)
 // ==========================================
 async function fetchHolidays() {
-    // 필요한 연도를 넉넉히 불러옴 (작년~내후년)
     const thisYear = new Date().getFullYear();
     const years = [thisYear - 1, thisYear, thisYear + 1];
-
     try {
         for (const year of years) {
             const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/KR`);
             if (!res.ok) continue;
             const data = await res.json();
-            // data 각 항목의 date 형식이 'YYYY-MM-DD'
             data.forEach(h => holidaySet.add(h.date));
         }
     } catch (err) {
-        // 공휴일 API 실패 시에도 주말 차단은 계속 동작함
         console.error("공휴일 정보 로드 실패:", err);
     }
 }
 
 // ==========================================
-// 3. FullCalendar 달력 초기화 함수
+// 3. FullCalendar 초기화
 // ==========================================
 function initCalendar() {
     const calendarEl = document.getElementById('calendar');
-    
+
     calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth', 
-        locale: 'ko',                
+        initialView: 'dayGridMonth',
+        locale: 'ko',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay' 
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         buttonText: { today: '오늘', month: '월', week: '주', day: '일' },
-        height: '650px',
+        height: '82vh',
+        expandRows: true,
         editable: false,
         events: [],
 
-        // 주말/공휴일 칸을 빨갛게 표시
+        // 주말/공휴일 칸 강조
         dayCellClassNames: function (arg) {
-            const dateStr = toDateStr(arg.date);
-            if (isBlockedDate(dateStr)) return ['blocked-day'];
-            return [];
+            return isBlockedDate(toDateStr(arg.date)) ? ['blocked-day'] : [];
         },
 
-        // 달력의 근태 이벤트를 클릭하면 삭제할 수 있음
+        // 이벤트 클릭 -> 개별 삭제
         eventClick: function (info) {
             const ev = info.event;
             if (confirm(`아래 기록을 삭제할까요?\n\n${ev.title}`)) {
@@ -108,12 +147,12 @@ function initCalendar() {
             }
         }
     });
-    
+
     calendar.render();
 }
 
 // ==========================================
-// 4. Supabase에서 직원 목록 가져오기
+// 4. 직원 목록 + 필터 체크박스
 // ==========================================
 async function fetchEmployees() {
     try {
@@ -133,20 +172,66 @@ async function fetchEmployees() {
         } else {
             selectEl.innerHTML = `<option value="">등록된 직원이 없습니다.</option>`;
         }
+
+        buildEmployeeFilter(data);
     } catch (err) {
         console.error("fetchEmployees 에러:", err);
     }
 }
 
+// 표시할 팀원 다중 선택 체크박스 생성
+function buildEmployeeFilter(employees) {
+    const wrap = document.getElementById("employee-filter");
+    if (!wrap) return;
+
+    if (!employees || employees.length === 0) {
+        wrap.innerHTML = `<p class="filter-empty">등록된 팀원이 없습니다.</p>`;
+        return;
+    }
+
+    wrap.innerHTML = employees.map(emp => `
+        <label class="filter-item">
+            <input type="checkbox" class="emp-filter-cb" value="${emp.id}">
+            <span>${emp.name}</span>
+        </label>
+    `).join('');
+
+    wrap.querySelectorAll('.emp-filter-cb').forEach(cb => {
+        cb.addEventListener('change', onFilterChange);
+    });
+}
+
+function onFilterChange() {
+    selectedFilterIds = new Set(
+        Array.from(document.querySelectorAll('.emp-filter-cb:checked')).map(cb => cb.value)
+    );
+    applyFilter();
+}
+
+function setAllEmployeeFilter(checked) {
+    document.querySelectorAll('.emp-filter-cb').forEach(cb => { cb.checked = checked; });
+    onFilterChange();
+}
+
+// 선택된 팀원만 달력에 표시 (아무도 선택 안 하면 전체)
+function applyFilter() {
+    const filtered = (selectedFilterIds.size === 0)
+        ? allEvents
+        : allEvents.filter(e => selectedFilterIds.has(String(e.extendedProps.employeeId)));
+
+    calendar.removeAllEvents();
+    calendar.addEventSource(filtered);
+}
+
 // ==========================================
-// 5. Supabase에서 근태 기록 가져와 달력에 표시하기
+// 5. 근태 기록 -> 달력 이벤트
 // ==========================================
 async function fetchAttendance() {
     try {
         const { data, error } = await _supabase
             .from('attendance')
             .select(`
-                id, work_date, type, check_in, check_out, leave_type, notes,
+                id, work_date, type, check_in, check_out, leave_type, notes, employee_id,
                 employees ( name )
             `);
 
@@ -155,48 +240,53 @@ async function fetchAttendance() {
             return;
         }
 
-        const events = data.map(record => {
+        allEvents = data.map(record => {
             const empName = record.employees ? record.employees.name : '미확인';
-            let eventTitle = '';
-            let eventColor = '#4f46e5';
 
+            let label;
             if (record.type === '출퇴근') {
-                let shiftName = "출퇴근";
-                if (record.check_in === "09:00:00") shiftName = "9시~6시";
-                else if (record.check_in === "10:00:00") shiftName = "10시~7시";
-                else if (record.check_in === "08:00:00") shiftName = "8시~5시";
-                else if (record.check_in === "07:00:00") shiftName = "7시~4시";
-
-                eventTitle = `[${shiftName}] ${empName}`;
-                eventColor = '#10b981'; 
+                label = shiftName(record.check_in);
+            } else if (record.type === '휴가') {
+                label = record.leave_type; // 연차 / 오전반차 / 오후반차
             } else {
-                eventTitle = `[${record.leave_type}] ${empName}`;
-                eventColor = '#f59e0b'; 
+                label = record.type;        // 출장 / 외근 / 교육 / 회의 / 건강검진
             }
 
-            if (record.notes) {
-                eventTitle += ` (${record.notes})`;
-            }
+            let title = `[${label}] ${empName}`;
+            if (record.notes) title += ` (${record.notes})`;
+
+            const color = TYPE_COLORS[record.type] || '#4f46e5';
 
             return {
                 id: record.id,
-                title: eventTitle,
+                title: title,
                 start: record.work_date,
-                backgroundColor: eventColor,
-                borderColor: eventColor
+                backgroundColor: color,
+                borderColor: color,
+                extendedProps: { employeeId: record.employee_id }
             };
         });
 
-        calendar.removeAllEvents();
-        calendar.addEventSource(events);
+        applyFilter();
     } catch (err) {
         console.error("fetchAttendance 에러:", err);
     }
 }
 
+// 범례 표시
+function renderLegend() {
+    const el = document.getElementById("legend");
+    if (!el) return;
+    el.innerHTML = Object.entries(TYPE_COLORS).map(([name, color]) => `
+        <span class="legend-item">
+            <span class="legend-dot" style="background:${color}"></span>${name}
+        </span>
+    `).join('');
+}
+
 function toggleFormFields() {}
 
-// 두 날짜 사이의 모든 날짜 리스트를 구하는 함수 (YYYY-MM-DD 형태 배열 리턴)
+// 두 날짜 사이 모든 날짜 배열
 function getDatesStartToArr(startDate, endDate) {
     const arr = [];
     const dt = new Date(startDate + 'T00:00:00');
@@ -209,15 +299,12 @@ function getDatesStartToArr(startDate, endDate) {
 }
 
 // ==========================================
-// 근태 기록 1건 삭제 (달력 이벤트 클릭 시 사용)
+// 삭제 함수들
 // ==========================================
 async function deleteAttendanceById(id) {
     try {
         const { error } = await _supabase.from('attendance').delete().eq('id', id);
-        if (error) {
-            alert("삭제 실패: " + error.message);
-            return;
-        }
+        if (error) { alert("삭제 실패: " + error.message); return; }
         alert("삭제되었습니다.");
         fetchAttendance();
     } catch (err) {
@@ -226,9 +313,6 @@ async function deleteAttendanceById(id) {
     }
 }
 
-// ==========================================
-// 선택한 기간의 직원 기록 일괄 삭제 ('기존 내용 삭제' 옵션용)
-// ==========================================
 async function deleteAttendanceByRange(employeeId, dateList, startDate, endDate) {
     try {
         const { data: toDelete, error: findErr } = await _supabase
@@ -265,10 +349,7 @@ async function deleteAttendanceByRange(employeeId, dateList, startDate, endDate)
 }
 
 // ==========================================
-// 7. 데이터 등록(Insert) 하기
-//    - 주말/공휴일 자동 제외
-//    - '기존 내용 삭제' 옵션 처리
-//    - 동일 내용 중복 검사 / 같은 type 교체
+// 7. 등록 (주말/공휴일 제외 + 삭제 옵션 + 중복검사)
 // ==========================================
 async function handleFormSubmit(e) {
     e.preventDefault();
@@ -278,15 +359,9 @@ async function handleFormSubmit(e) {
     const startDate = document.getElementById("input-start-date").value;
     let endDate = document.getElementById("input-end-date").value;
     const notes = document.getElementById("input-notes").value || null;
-    
-    if (!selectedType) {
-        alert("구분 종류를 선택해 주세요.");
-        return;
-    }
 
-    if (!endDate) {
-        endDate = startDate;
-    }
+    if (!selectedType) { alert("구분 종류를 선택해 주세요."); return; }
+    if (!endDate) endDate = startDate;
 
     if (new Date(startDate) > new Date(endDate)) {
         alert("⚠️ 종료일은 시작일보다 빠를 수 없습니다.");
@@ -295,7 +370,7 @@ async function handleFormSubmit(e) {
 
     const dateList = getDatesStartToArr(startDate, endDate);
 
-    // ----- (A) '기존 내용 삭제' 옵션 처리 -----
+    // (A) 기존 내용 삭제
     if (selectedType === "삭제") {
         await deleteAttendanceByRange(employeeId, dateList, startDate, endDate);
         document.getElementById("attendance-form").reset();
@@ -303,29 +378,16 @@ async function handleFormSubmit(e) {
         return;
     }
 
-    // ----- (B) 일반 등록: 구분 종류 매핑 -----
-    let targetType = '';
-    let targetCheckIn = null;
-    let targetCheckOut = null;
-    let targetLeaveType = null;
+    // (B) 유형 매핑
+    const mapped = TYPE_MAP[selectedType];
+    if (!mapped) { alert("알 수 없는 구분 종류입니다."); return; }
 
-    if (selectedType === "9시~6시") {
-        targetType = "출퇴근"; targetCheckIn = "09:00:00"; targetCheckOut = "18:00:00";
-    } else if (selectedType === "10시~7시") {
-        targetType = "출퇴근"; targetCheckIn = "10:00:00"; targetCheckOut = "19:00:00";
-    } else if (selectedType === "8시~5시") {
-        targetType = "출퇴근"; targetCheckIn = "08:00:00"; targetCheckOut = "17:00:00";
-    } else if (selectedType === "7시~4시") {
-        targetType = "출퇴근"; targetCheckIn = "07:00:00"; targetCheckOut = "16:00:00";
-    } else if (selectedType === "휴가") {
-        targetType = "휴가"; targetLeaveType = "연차";
-    } else if (selectedType === "오전") {
-        targetType = "휴가"; targetLeaveType = "오전반차";
-    } else if (selectedType === "오후") {
-        targetType = "휴가"; targetLeaveType = "오후반차";
-    }
+    const targetType = mapped.type;
+    const targetCheckIn = mapped.checkIn || null;
+    const targetCheckOut = mapped.checkOut || null;
+    const targetLeaveType = mapped.leaveType || null;
 
-    // ----- (C) 주말/공휴일 제외 -----
+    // (C) 주말/공휴일 제외
     const workDateList = dateList.filter(d => !isBlockedDate(d));
     const skippedDates = dateList.filter(d => isBlockedDate(d));
 
@@ -333,7 +395,6 @@ async function handleFormSubmit(e) {
         alert("⚠️ 선택한 날짜가 모두 주말 또는 공휴일이라 등록할 날짜가 없습니다.");
         return;
     }
-
     if (skippedDates.length > 0) {
         const ok = confirm(
             `아래 ${skippedDates.length}일은 주말/공휴일이라 자동 제외됩니다:\n${skippedDates.join(', ')}\n\n` +
@@ -343,7 +404,6 @@ async function handleFormSubmit(e) {
     }
 
     try {
-        // 해당 직원의 (근무일 한정) 기존 기록 조회
         const { data: existingRecords, error: checkError } = await _supabase
             .from('attendance')
             .select('id, work_date, type, check_in, leave_type')
@@ -352,13 +412,13 @@ async function handleFormSubmit(e) {
 
         if (checkError) throw checkError;
 
-        // 완전히 동일한 내용인지 확인 (차단 대상)
+        // 완전히 동일한 내용 차단
         for (const record of existingRecords) {
             const isExactSame =
                 record.type === targetType &&
-                (targetType === "출퇴근"
-                    ? record.check_in === targetCheckIn          // 같은 시프트
-                    : record.leave_type === targetLeaveType);    // 같은 휴가 종류
+                (targetType === "출퇴근" ? record.check_in === targetCheckIn
+                 : targetType === "휴가" ? record.leave_type === targetLeaveType
+                 : true);
 
             if (isExactSame) {
                 alert(`⚠️ 중복 입력 방지: 해당 직원은 ${record.work_date}에 이미 동일한 신청([${selectedType}])이 등록되어 있습니다.`);
@@ -366,7 +426,7 @@ async function handleFormSubmit(e) {
             }
         }
 
-        // 같은 type(출퇴근↔출퇴근, 휴가↔휴가)끼리 겹치는 기존 기록 삭제
+        // 같은 type끼리 겹치면 교체
         const idsToDelete = existingRecords
             .filter(record => record.type === targetType)
             .map(record => record.id);
@@ -389,14 +449,12 @@ async function handleFormSubmit(e) {
 
             if (deleteError) throw deleteError;
         }
-
     } catch (err) {
         alert("처리 중 오류가 발생했습니다. 다시 시도해 주세요.");
         console.error(err);
         return;
     }
 
-    // 새 데이터 삽입 (주말/공휴일 제외된 workDateList 기준)
     const insertRows = workDateList.map(date => ({
         employee_id: parseInt(employeeId),
         work_date: date,
