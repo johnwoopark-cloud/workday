@@ -9,6 +9,7 @@ let calendar;
 let holidaySet = new Set();      // 공휴일 날짜 모음 ('YYYY-MM-DD')
 let allEvents = [];              // 전체 근태 이벤트(필터 전 원본)
 let selectedFilterIds = new Set(); // 표시할 팀원 id(문자열). 비어있으면 전체 표시
+let appInitialized = false;      // 달력 최초 1회만 생성
 
 // ==========================================
 // 근태 유형 정의 (한 곳에서 관리)
@@ -43,14 +44,14 @@ const TYPE_COLORS = {
 };
 
 // ==========================================
-// 2. 페이지 로드
+// 2. 페이지 로드 - 로그인 상태에 따라 화면 결정
 // ==========================================
-document.addEventListener("DOMContentLoaded", async () => {
-    await fetchHolidays();
-    initCalendar();
-    fetchEmployees();
-    fetchAttendance();
+document.addEventListener("DOMContentLoaded", () => {
+    // 로그인 / 로그아웃 핸들러
+    document.getElementById("login-form").addEventListener("submit", handleLogin);
+    document.getElementById("logout-btn").addEventListener("click", handleLogout);
 
+    // 근태 등록
     document.getElementById("attendance-form").addEventListener("submit", handleFormSubmit);
 
     // 필터 전체 선택/해제 버튼
@@ -64,7 +65,89 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 기본 시작 날짜 = 오늘
     document.getElementById("input-start-date").value = toDateStr(new Date());
+
+    // 인증 상태 확인 후 화면 결정
+    initAuth();
 });
+
+// ==========================================
+// 2-1. 인증 처리 (Supabase Auth)
+// ==========================================
+async function initAuth() {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session) {
+        showApp();
+    } else {
+        showLogin();
+    }
+
+    // 로그인/로그아웃 시 화면 자동 전환
+    _supabase.auth.onAuthStateChange((_event, session) => {
+        if (session) showApp();
+        else showLogin();
+    });
+}
+
+function showLogin() {
+    document.getElementById("login-view").style.display = "flex";
+    document.getElementById("app-view").style.display = "none";
+    document.getElementById("logout-btn").style.display = "none";
+    document.getElementById("current-user").textContent = "";
+
+    // 다른 사람이 볼 수 없도록 달력 비우기
+    if (calendar) calendar.removeAllEvents();
+    allEvents = [];
+}
+
+async function showApp() {
+    document.getElementById("login-view").style.display = "none";
+    document.getElementById("app-view").style.display = "";
+    document.getElementById("logout-btn").style.display = "";
+
+    // 로그인한 사용자 이메일 표시
+    const { data: { user } } = await _supabase.auth.getUser();
+    const who = document.getElementById("current-user");
+    if (who && user) who.textContent = user.email;
+
+    // 달력은 최초 1회만 생성
+    if (!appInitialized) {
+        await fetchHolidays();
+        initCalendar();
+        appInitialized = true;
+    }
+
+    fetchEmployees();
+    fetchAttendance();
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+    const errEl = document.getElementById("login-error");
+    const btn = document.getElementById("login-btn");
+
+    errEl.textContent = "";
+    btn.disabled = true;
+    btn.textContent = "로그인 중…";
+
+    const { error } = await _supabase.auth.signInWithPassword({ email, password });
+
+    btn.disabled = false;
+    btn.textContent = "로그인";
+
+    if (error) {
+        errEl.textContent = "로그인 실패: 이메일 또는 비밀번호를 확인해 주세요.";
+        return;
+    }
+    document.getElementById("login-form").reset();
+    // 화면 전환은 onAuthStateChange 가 처리
+}
+
+async function handleLogout() {
+    await _supabase.auth.signOut();
+    // 화면 전환은 onAuthStateChange 가 처리
+}
 
 // ==========================================
 // 날짜/주말/공휴일 공통 함수
