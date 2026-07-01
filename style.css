@@ -31,6 +31,10 @@ html, body {
 
 /* ===== 상단 헤더 ===== */
 .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
     padding: 18px 28px;
     background: var(--panel);
     border-bottom: 1px solid var(--line);
@@ -40,6 +44,86 @@ html, body {
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.02em;
+}
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.user-email { font-size: 13px; color: var(--muted); }
+.btn-logout {
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font);
+    color: var(--ink);
+    background: #f1f5f9;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+}
+.btn-logout:hover { background: #e2e8f0; }
+
+/* ===== 로그인 화면 ===== */
+.login-view {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;               /* JS 가 flex 로 전환 */
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--bg);
+}
+.login-card {
+    width: 100%;
+    max-width: 360px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 30px 26px;
+    box-shadow: 0 10px 34px rgba(15, 23, 42, 0.10);
+}
+.login-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+.login-sub {
+    margin: 6px 0 22px;
+    font-size: 14px;
+    color: var(--muted);
+}
+#login-form label {
+    display: block;
+    margin: 14px 0 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+}
+#login-form input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: var(--font);
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+#login-form input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+#login-form .btn-primary { margin-top: 20px; }
+.login-error {
+    margin: 12px 0 0;
+    min-height: 18px;
+    font-size: 13px;
+    color: var(--danger);
 }
 
 /* ===== 본문 2단 레이아웃 ===== */
