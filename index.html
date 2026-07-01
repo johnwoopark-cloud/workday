@@ -40,6 +40,7 @@
     <div class="app-body" id="app-view" style="display:none;">
         <!-- ===== 왼쪽: 입력 + 필터 ===== -->
         <aside class="sidebar">
+            <p id="user-notice" class="user-notice" style="display:none;"></p>
             <!-- 근태 등록 -->
             <section class="panel">
                 <h2 class="panel-title">근태 기록 등록</h2>
@@ -93,8 +94,8 @@
                 </form>
             </section>
 
-            <!-- 표시할 팀원 필터 (다중 선택) -->
-            <section class="panel">
+            <!-- 표시할 팀원 필터 (다중 선택) - 관리자만 표시 -->
+            <section class="panel" id="filter-panel">
                 <h2 class="panel-title">표시할 팀원</h2>
                 <div class="filter-actions">
                     <button type="button" id="filter-select-all" class="btn-mini">전체 선택</button>
