@@ -10,6 +10,8 @@ let holidaySet = new Set();      // 공휴일 날짜 모음 ('YYYY-MM-DD')
 let allEvents = [];              // 전체 근태 이벤트(필터 전 원본)
 let selectedFilterIds = new Set(); // 표시할 팀원 id(문자열). 비어있으면 전체 표시
 let appInitialized = false;      // 달력 최초 1회만 생성
+let currentEmployee = null;      // 로그인한 사용자와 연결된 직원 { id, name, is_admin }
+let isAdmin = false;             // 관리자 여부
 
 // ==========================================
 // 근태 유형 정의 (한 곳에서 관리)
@@ -109,6 +111,9 @@ async function showApp() {
     const who = document.getElementById("current-user");
     if (who && user) who.textContent = user.email;
 
+    // 로그인 계정 ↔ 직원 연결 및 관리자 여부 확인
+    await resolveCurrentUser(user);
+
     // 달력은 최초 1회만 생성
     if (!appInitialized) {
         await fetchHolidays();
@@ -118,6 +123,42 @@ async function showApp() {
 
     fetchEmployees();
     fetchAttendance();
+}
+
+// 현재 로그인 사용자와 직원 매칭 + 관리자 여부 판별
+async function resolveCurrentUser(user) {
+    currentEmployee = null;
+    isAdmin = false;
+    selectedFilterIds = new Set(); // 사용자 전환 시 필터 초기화
+
+    if (user) {
+        const { data, error } = await _supabase
+            .from('employees')
+            .select('id, name, is_admin')
+            .eq('email', user.email)
+            .limit(1);
+
+        if (!error && data && data.length > 0) {
+            currentEmployee = data[0];
+            isAdmin = currentEmployee.is_admin === true;
+        }
+    }
+
+    // 관리자만 "표시할 팀원" 필터를 보여줌
+    const filterPanel = document.getElementById("filter-panel");
+    if (filterPanel) filterPanel.style.display = isAdmin ? "" : "none";
+
+    // 이메일이 직원 명단과 연결되지 않은 일반 사용자 안내
+    const notice = document.getElementById("user-notice");
+    if (notice) {
+        if (!currentEmployee && !isAdmin) {
+            notice.textContent = "⚠️ 로그인 계정이 직원 명단과 연결되어 있지 않습니다. 관리자에게 문의하세요.";
+            notice.style.display = "";
+        } else {
+            notice.textContent = "";
+            notice.style.display = "none";
+        }
+    }
 }
 
 async function handleLogin(e) {
