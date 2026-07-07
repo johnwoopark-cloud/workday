@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>비밀번호 변경</title>
+  <link rel="stylesheet" href="./auth.css">
+</head>
+<body>
+  <main class="card">
+    <div class="card__accent"></div>
+    <div class="card__body">
+      <p class="brand">우리 사이트</p>
+      <h1>비밀번호 변경</h1>
+      <p class="sub" id="whoami">로그인한 계정의 비밀번호를 새로 설정합니다.</p>
+
+      <p class="msg msg--info" id="forcedNotice">
+        임시 비밀번호로 로그인했습니다. 사용하기 전에 비밀번호를 변경해 주세요.
+      </p>
+
+      <div class="field">
+        <label for="pw1">새 비밀번호</label>
+        <input type="password" id="pw1" autocomplete="new-password" placeholder="8자 이상">
+      </div>
+
+      <div class="field">
+        <label for="pw2">새 비밀번호 확인</label>
+        <input type="password" id="pw2" autocomplete="new-password" placeholder="한 번 더 입력">
+      </div>
+
+      <button id="saveBtn">변경하기</button>
+
+      <p class="msg" id="msg"></p>
+
+      <div class="foot">
+        <a href="./index.html">메인으로</a>
+        <button class="linkbtn" id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+  <script>
+    const pw1 = document.getElementById("pw1");
+    const pw2 = document.getElementById("pw2");
+    const btn = document.getElementById("saveBtn");
+    const msg = document.getElementById("msg");
+    const whoami = document.getElementById("whoami");
+    const forcedNotice = document.getElementById("forcedNotice");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const MIN_LEN = 6;   // Supabase 대시보드의 최소 길이 설정과 맞추세요
+    const forced = new URLSearchParams(location.search).get("forced") === "1";
+
+    function showMsg(text, kind) {
+      msg.textContent = text;
+      msg.className = "msg show msg--" + kind;
+    }
+
+    // 로그인 안 했으면 로그인 페이지로. 했으면 이메일 표시.
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { location.href = "./login.html"; return; }
+      whoami.textContent = session.user.email + " 계정의 비밀번호를 변경합니다.";
+      if (forced) forcedNotice.classList.add("show");
+    })();
+
+    async function save() {
+      const p1 = pw1.value;
+      const p2 = pw2.value;
+
+      if (p1.length < MIN_LEN) {
+        showMsg("비밀번호는 " + MIN_LEN + "자 이상이어야 합니다.", "error");
+        return;
+      }
+      if (p1 !== p2) {
+        showMsg("두 비밀번호가 일치하지 않습니다.", "error");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "저장 중…";
+
+      // 비번 변경 + 강제변경 플래그 해제를 한 번에
+      const { error } = await sb.auth.updateUser({
+        password: p1,
+        data: { must_change_password: false }
+      });
+
+      if (error) {
+        showMsg("변경 실패: " + error.message, "error");
+        btn.disabled = false;
+        btn.textContent = "변경하기";
+        return;
+      }
+
+      showMsg("변경되었습니다. 잠시 후 메인으로 이동합니다.", "ok");
+      pw1.value = pw2.value = "";
+      setTimeout(() => location.href = APP_HOME, 1200);
+    }
+
+    btn.addEventListener("click", save);
+    pw2.addEventListener("keydown", e => { if (e.key === "Enter") save(); });
+
+    logoutBtn.addEventListener("click", async () => {
+      await sb.auth.signOut();
+      location.href = "./login.html";
+    });
+  </script>
+</body>
+</html>
