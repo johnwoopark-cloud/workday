@@ -20,7 +20,7 @@
 
       <div class="field">
         <label for="pw1">새 비밀번호</label>
-        <input type="password" id="pw1" autocomplete="new-password" placeholder="8자 이상">
+        <input type="password" id="pw1" autocomplete="new-password" placeholder="6자 이상">
       </div>
 
       <div class="field">
@@ -40,12 +40,14 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
- <script>
+  <script>
+    // ===== 설정 =====
     const SUPABASE_URL = "https://vxvpjhaxplrqlxyyzxlo.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4dnBqaGF4cGxycWx4eXl6eGxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNDM2MDUsImV4cCI6MjA5NjcxOTYwNX0.pfcnUPN82_OA-w3jl3Xf0Kbjsdj9t2EqV2yyCYGJ7NU";
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const APP_HOME = "./index.html";
-  <script>
+
+    // ===== 요소 =====
     const pw1 = document.getElementById("pw1");
     const pw2 = document.getElementById("pw2");
     const btn = document.getElementById("saveBtn");
@@ -62,9 +64,9 @@
       msg.className = "msg show msg--" + kind;
     }
 
-    // 로그인 안 했으면 로그인 페이지로. 했으면 이메일 표시.
+    // 로그인 안 했으면 메인으로. 했으면 이메일 표시.
     (async () => {
-      const { data: { session } } = await sb.auth.getSession();
+      const { data: { session } } = await _supabase.auth.getSession();
       if (!session) { location.href = "./index.html"; return; }
       whoami.textContent = session.user.email + " 계정의 비밀번호를 변경합니다.";
       if (forced) forcedNotice.classList.add("show");
@@ -87,7 +89,7 @@
       btn.textContent = "저장 중…";
 
       // 비번 변경 + 강제변경 플래그 해제를 한 번에
-      const { error } = await sb.auth.updateUser({
+      const { error } = await _supabase.auth.updateUser({
         password: p1,
         data: { must_change_password: false }
       });
@@ -108,8 +110,8 @@
     pw2.addEventListener("keydown", e => { if (e.key === "Enter") save(); });
 
     logoutBtn.addEventListener("click", async () => {
-      await sb.auth.signOut();
-      location.href = "./login.html";
+      await _supabase.auth.signOut();
+      location.href = "./index.html";
     });
   </script>
 </body>
