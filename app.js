@@ -292,13 +292,23 @@ async function fetchEmployees() {
             return;
         }
 
-        const selectEl = document.getElementById("select-employee");
-        if (data && data.length > 0) {
-            selectEl.innerHTML = data.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('');
-        } else {
-            selectEl.innerHTML = `<option value="">등록된 직원이 없습니다.</option>`;
+        // ▼ 등록용 드롭다운: 관리자는 전체, 일반 사용자는 본인만
+        let listForDropdown = data || [];
+        if (!isAdmin && currentEmployee) {
+            listForDropdown = listForDropdown.filter(emp => emp.id === currentEmployee.id);
         }
 
+        const selectEl = document.getElementById("select-employee");
+        if (listForDropdown && listForDropdown.length > 0) {
+            selectEl.innerHTML = listForDropdown
+                .map(emp => `<option value="${emp.id}">${emp.name}</option>`)
+                .join('');
+        } else {
+            // 본인이 직원 명단과 연결 안 된 일반 사용자 등
+            selectEl.innerHTML = `<option value="">등록 가능한 직원이 없습니다.</option>`;
+        }
+
+        // ▼ 필터 체크박스는 관리자만 보이므로 전체 명단을 그대로 전달
         buildEmployeeFilter(data);
     } catch (err) {
         console.error("fetchEmployees 에러:", err);
