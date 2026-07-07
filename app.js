@@ -439,8 +439,28 @@ function getDatesStartToArr(startDate, endDate) {
 // ==========================================
 async function deleteAttendanceById(id) {
     try {
-        const { error } = await _supabase.from('attendance').delete().eq('id', id);
-        if (error) { alert("삭제 실패: " + error.message); return; }
+        const { data, error } = await _supabase
+            .from('attendance')
+            .delete()
+            .eq('id', id)
+            .select();   // 실제 삭제된 행을 돌려받아 개수 확인
+
+        if (error) {
+            // 권한 거부 등 명시적 에러
+            if (error.code === '42501' || /row-level security/i.test(error.message)) {
+                alert("타인의 기록은 삭제할 수 없습니다.");
+            } else {
+                alert("삭제 실패: " + error.message);
+            }
+            return;
+        }
+
+        // 에러는 없지만 실제로 지워진 게 없으면 = RLS가 조용히 막은 것
+        if (!data || data.length === 0) {
+            alert("타인의 기록은 삭제할 수 없습니다.");
+            return;
+        }
+
         alert("삭제되었습니다.");
         fetchAttendance();
     } catch (err) {
