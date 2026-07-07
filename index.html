@@ -6,27 +6,17 @@
   <title>2026년 법무저작권팀 근태 현황</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="style.css">
+  <!-- 라이브러리 (각각 한 번씩만) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <script src="./app.js"></script>
-  <script>
-    (async () => {
-      const { data: { session } } = await _supabase.auth.getSession();
-      if (!session) {
-        location.href = "https://johnwoopark-cloud.github.io/workday/login.html";
-        return;
-      }
-      if (session.user.user_metadata?.must_change_password) {
-        location.href = "https://johnwoopark-cloud.github.io/workday/account.html?forced=1";
-      }
-    })();
-  </script>
+  <!-- app.js 는 본문 맨 아래에서 딱 한 번만 로드합니다 -->
 </head>
 <body>
     <header class="app-header">
         <h1>🗓️ 2026 법무저작권팀 근태 캘린더</h1>
         <div class="header-user">
             <span id="current-user" class="user-email"></span>
+            <a href="./account.html" id="change-pw" class="btn-logout" style="text-decoration:none;">비밀번호 변경</a>
             <button id="logout-btn" type="button" class="btn-logout">로그아웃</button>
         </div>
     </header>
@@ -100,7 +90,7 @@
                     <input type="text" id="input-notes" placeholder="예: 외근, 늦은 퇴근 등">
 
                     <button type="submit" class="btn-primary">기록 저장하기</button>
-                    <p class="hint">※ 주말·공휴일은 자동 제외됩니다. 달력의 기록을 클릭하면 개별 삭제됩니다.</p>
+                    <p class="hint">※ 주말·공휴일은 자동 제외됩니다.<br> <b>달력의 기록을 클릭하면 개별 삭제됩니다.</b></p>
                 </form>
             </section>
 
@@ -128,6 +118,7 @@
         </main>
     </div>
 
+    <!-- app.js 는 여기서 딱 한 번만 (DOM이 다 만들어진 뒤 실행되도록 맨 아래) -->
     <script src="app.js"></script>
 </body>
 </html>
