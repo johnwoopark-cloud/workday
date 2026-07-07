@@ -65,7 +65,7 @@
     // 로그인 안 했으면 로그인 페이지로. 했으면 이메일 표시.
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { location.href = "./login.html"; return; }
+      if (!session) { location.href = "./index.html"; return; }
       whoami.textContent = session.user.email + " 계정의 비밀번호를 변경합니다.";
       if (forced) forcedNotice.classList.add("show");
     })();
