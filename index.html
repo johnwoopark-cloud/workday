@@ -1,30 +1,17 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026년 법무저작권팀 근태 현황</title>
-
-    <!-- 한글에 잘 맞는 Pretendard 폰트 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-    <link rel="stylesheet" href="style.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://johnwoopark-cloud.github.io/workday/supabase-config.js"></script>
-<script>
-  (async () => {
-    // config가 안 실려서 sb가 없으면 여기서 잡아줌
-    if (typeof sb === "undefined") {
-      alert("supabase-config.js가 로드되지 않았습니다. 파일 위치/경로를 확인하세요.");
-      return;
-    }
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      console.log("현재 세션:", session);   // 개발자도구 콘솔에서 확인
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026년 법무저작권팀 근태 현황</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <script src="./app.js"></script>
+  <script>
+    (async () => {
+      const { data: { session } } = await _supabase.auth.getSession();
       if (!session) {
         location.href = "https://johnwoopark-cloud.github.io/workday/login.html";
         return;
@@ -32,12 +19,8 @@
       if (session.user.user_metadata?.must_change_password) {
         location.href = "https://johnwoopark-cloud.github.io/workday/account.html?forced=1";
       }
-    } catch (e) {
-      console.error("문지기 오류:", e);
-      alert("인증 확인 중 오류: " + e.message);
-    }
-  })();
-</script>
+    })();
+  </script>
 </head>
 <body>
     <header class="app-header">
