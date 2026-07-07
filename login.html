@@ -35,9 +35,14 @@
     </div>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // 설정 (app.js와 동일한 값)
+    const SUPABASE_URL = "https://vxvpjhaxplrqlxyyzxlo.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4dnBqaGF4cGxycWx4eXl6eGxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNDM2MDUsImV4cCI6MjA5NjcxOTYwNX0.pfcnUPN82_OA-w3jl3Xf0Kbjsdj9t2EqV2yyCYGJ7NU";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const APP_HOME = "./index.html";
+
     const emailEl = document.getElementById("email");
     const pwEl = document.getElementById("password");
     const btn = document.getElementById("loginBtn");
@@ -48,9 +53,8 @@
       msg.className = "msg show msg--" + kind;
     }
 
-    // 이미 로그인돼 있으면 바로 앱으로 보냄
     (async () => {
-      const { data: { session } } = await sb.auth.getSession();
+      const { data: { session } } = await _supabase.auth.getSession();
       if (session) location.href = APP_HOME;
     })();
 
@@ -61,29 +65,24 @@
         showMsg("이메일과 비밀번호를 모두 입력하세요.", "error");
         return;
       }
-
       btn.disabled = true;
       btn.textContent = "로그인 중…";
-
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
+      const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
       if (error) {
         showMsg("로그인 실패: 이메일 또는 비밀번호를 확인하세요.", "error");
         btn.disabled = false;
         btn.textContent = "로그인";
         return;
       }
-
-      // 임시 비번으로 처음 들어온 사용자는 비번 변경 화면으로 강제 이동
       const mustChange = data.user?.user_metadata?.must_change_password;
       location.href = mustChange ? "./account.html?forced=1" : APP_HOME;
     }
 
     btn.addEventListener("click", doLogin);
-    // 엔터로도 로그인
     [emailEl, pwEl].forEach(el =>
       el.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); })
     );
   </script>
+  
 </body>
 </html>
