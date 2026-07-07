@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>로그인</title>
+  <link rel="stylesheet" href="./auth.css">
+</head>
+<body>
+  <main class="card">
+    <div class="card__accent"></div>
+    <div class="card__body">
+      <p class="brand">KBS미디어 법무저작권팀 일정</p>
+      <h1>로그인</h1>
+      <p class="sub">등록된 이메일과 비밀번호로 로그인하세요.</p>
+
+      <div class="field">
+        <label for="email">이메일</label>
+        <input type="email" id="email" autocomplete="username" placeholder="name@example.com">
+      </div>
+
+      <div class="field">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" autocomplete="current-password" placeholder="비밀번호">
+      </div>
+
+      <button id="loginBtn">로그인</button>
+
+      <p class="msg" id="msg"></p>
+
+      <div class="foot">
+        <span>비밀번호를 잊으셨나요?</span>
+        <span>관리자에게 문의하세요</span>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
+  <script>
+    const emailEl = document.getElementById("email");
+    const pwEl = document.getElementById("password");
+    const btn = document.getElementById("loginBtn");
+    const msg = document.getElementById("msg");
+
+    function showMsg(text, kind) {
+      msg.textContent = text;
+      msg.className = "msg show msg--" + kind;
+    }
+
+    // 이미 로그인돼 있으면 바로 앱으로 보냄
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) location.href = APP_HOME;
+    })();
+
+    async function doLogin() {
+      const email = emailEl.value.trim();
+      const password = pwEl.value;
+      if (!email || !password) {
+        showMsg("이메일과 비밀번호를 모두 입력하세요.", "error");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "로그인 중…";
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        showMsg("로그인 실패: 이메일 또는 비밀번호를 확인하세요.", "error");
+        btn.disabled = false;
+        btn.textContent = "로그인";
+        return;
+      }
+
+      // 임시 비번으로 처음 들어온 사용자는 비번 변경 화면으로 강제 이동
+      const mustChange = data.user?.user_metadata?.must_change_password;
+      location.href = mustChange ? "./account.html?forced=1" : APP_HOME;
+    }
+
+    btn.addEventListener("click", doLogin);
+    // 엔터로도 로그인
+    [emailEl, pwEl].forEach(el =>
+      el.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); })
+    );
+  </script>
+</body>
+</html>
