@@ -17,12 +17,12 @@
      (async () => {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) {                       // 로그인 안 했으면
-      location.href = "./login.html";     // 로그인 페이지로 보냄
+      location.href = "https://johnwoopark-cloud.github.io/workday/login.html";     // 로그인 페이지로 보냄
       return;
     }
     // 임시 비번 사용자는 먼저 비번 변경
     if (session.user.user_metadata?.must_change_password) {
-      location.href = "./account.html?forced=1";
+      location.href = "https://johnwoopark-cloud.github.io/workday/account.html?forced=1";
     }
     })();
   </script>
