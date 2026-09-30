@@ -22,7 +22,7 @@ const TYPE_MAP = {
     "10시~7시": { type: "출퇴근", checkIn: "10:00:00", checkOut: "19:00:00" },
     "8시~5시":  { type: "출퇴근", checkIn: "08:00:00", checkOut: "17:00:00" },
     "7시~4시":  { type: "출퇴근", checkIn: "07:00:00", checkOut: "16:00:00" },
-    "단축근무": { type: "출퇴근", checkIn: "07:00:00", checkOut: "13:30:00" },
+    "7시~1시30분": { type: "출퇴근", checkIn: "07:00:00", checkOut: "13:30:00" },
     "휴가":     { type: "휴가",   leaveType: "연차" },
     "오전":     { type: "휴가",   leaveType: "오전반차" },
     "오후":     { type: "휴가",   leaveType: "오후반차" },
@@ -216,7 +216,7 @@ function isBlockedDate(dateStr) {
 
 // 출퇴근 check_in(+check_out) -> 시프트 이름
 function shiftName(checkIn, checkOut) {
-    if (checkIn === "07:00:00" && checkOut === "13:30:00") return "단축근무";
+    if (checkIn === "07:00:00" && checkOut === "13:30:00") return "7시~1시30분";
     if (checkIn === "09:00:00") return "9시~6시";
     if (checkIn === "10:00:00") return "10시~7시";
     if (checkIn === "08:00:00") return "8시~5시";
