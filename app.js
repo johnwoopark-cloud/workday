@@ -22,6 +22,7 @@ const TYPE_MAP = {
     "10시~7시": { type: "출퇴근", checkIn: "10:00:00", checkOut: "19:00:00" },
     "8시~5시":  { type: "출퇴근", checkIn: "08:00:00", checkOut: "17:00:00" },
     "7시~4시":  { type: "출퇴근", checkIn: "07:00:00", checkOut: "16:00:00" },
+    "단축근무": { type: "출퇴근", checkIn: "07:00:00", checkOut: "13:30:00" },
     "휴가":     { type: "휴가",   leaveType: "연차" },
     "오전":     { type: "휴가",   leaveType: "오전반차" },
     "오후":     { type: "휴가",   leaveType: "오후반차" },
@@ -213,8 +214,9 @@ function isBlockedDate(dateStr) {
     return isWeekend(dateStr) || isHoliday(dateStr);
 }
 
-// 출퇴근 check_in -> 시프트 이름
-function shiftName(checkIn) {
+// 출퇴근 check_in(+check_out) -> 시프트 이름
+function shiftName(checkIn, checkOut) {
+    if (checkIn === "07:00:00" && checkOut === "13:30:00") return "단축근무";
     if (checkIn === "09:00:00") return "9시~6시";
     if (checkIn === "10:00:00") return "10시~7시";
     if (checkIn === "08:00:00") return "8시~5시";
@@ -381,7 +383,7 @@ async function fetchAttendance() {
 
             let label;
             if (record.type === '출퇴근') {
-                label = shiftName(record.check_in);
+                label = shiftName(record.check_in, record.check_out);
             } else if (record.type === '휴가') {
                 label = record.leave_type; // 연차 / 오전반차 / 오후반차
             } else {
@@ -562,7 +564,7 @@ async function handleFormSubmit(e) {
     try {
         const { data: existingRecords, error: checkError } = await _supabase
             .from('attendance')
-            .select('id, work_date, type, check_in, leave_type')
+            .select('id, work_date, type, check_in, check_out, leave_type')
             .eq('employee_id', parseInt(employeeId))
             .in('work_date', workDateList);
 
@@ -572,7 +574,7 @@ async function handleFormSubmit(e) {
         for (const record of existingRecords) {
             const isExactSame =
                 record.type === targetType &&
-                (targetType === "출퇴근" ? record.check_in === targetCheckIn
+                (targetType === "출퇴근" ? record.check_in === targetCheckIn && record.check_out === targetCheckOut
                  : targetType === "휴가" ? record.leave_type === targetLeaveType
                  : true);
 
