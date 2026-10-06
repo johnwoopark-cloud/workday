@@ -26,6 +26,7 @@ const TYPE_MAP = {
     "휴가":     { type: "휴가",   leaveType: "연차" },
     "오전":     { type: "휴가",   leaveType: "오전반차" },
     "오후":     { type: "휴가",   leaveType: "오후반차" },
+    "병가":     { type: "휴가",   leaveType: "병가" },
     "출장":     { type: "출장" },
     "외근":     { type: "외근" },
     "교육":     { type: "교육" },
@@ -385,7 +386,7 @@ async function fetchAttendance() {
             if (record.type === '출퇴근') {
                 label = shiftName(record.check_in, record.check_out);
             } else if (record.type === '휴가') {
-                label = record.leave_type; // 연차 / 오전반차 / 오후반차
+                label = record.leave_type; // 연차 / 오전반차 / 오후반차 / 병가
             } else {
                 label = record.type;        // 출장 / 외근 / 교육 / 회의 / 건강검진
             }
